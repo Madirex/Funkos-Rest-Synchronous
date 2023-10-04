@@ -52,7 +52,6 @@ public class CsvManager {
      */
     public Optional<List<Funko>> fileToFunkoList(String path) throws ReadCSVFailException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
         try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
             return Optional.of(reader.lines()
                     .map(line -> line.split(","))

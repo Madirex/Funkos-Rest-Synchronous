@@ -1,6 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/intellij,gradle,java,dotenv,sonar
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij,gradle,java,dotenv,sonar
 
+.gradle/
 ### dotenv ###
 /src/main/resources/.env
 

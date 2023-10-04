@@ -3,11 +3,14 @@ package com.madirex;
 import com.madirex.controllers.FunkoController;
 import com.madirex.exceptions.FunkoException;
 import com.madirex.exceptions.FunkoNotFoundException;
+import com.madirex.exceptions.FunkoNotValidException;
+import com.madirex.exceptions.ReadCSVFailException;
 import com.madirex.models.Funko;
 import com.madirex.models.Model;
 import com.madirex.repositories.funko.FunkoRepositoryImpl;
 import com.madirex.services.crud.funko.FunkoServiceImpl;
 import com.madirex.services.database.DatabaseManager;
+import com.madirex.services.io.CsvManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -19,6 +22,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FunkoProgram {
 
@@ -124,23 +128,28 @@ public class FunkoProgram {
     }
 
     public void loadFunkosFileAndInsertToDatabase(String path) {
-        Logger logger = LoggerFactory.getLogger(FunkoProgram.class);
+        AtomicBoolean failed = new AtomicBoolean(false);
+        CsvManager csvManager = CsvManager.getInstance();
         try {
-            Flux<String> csvFlux = Flux.fromStream(Files.lines(Paths.get(path)))
-                    .skip(1);
-            csvFlux.subscribe(
-                    line -> {
-                        String[] parts = line.split(",");
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        Funko funko = Funko.builder()
-                                .name(parts[1])
-                                .model(Model.valueOf(parts[2]))
-                                .price(Double.parseDouble(parts[3]))
-                                .releaseDate(LocalDate.parse(parts[4], formatter))
-                                .build();
-                        logger.info(String.valueOf(funko));
+            csvManager.fileToFunkoList(path)
+                    .ifPresent(e -> {
+                        e.forEach(funko -> {
+                            try {
+                                controller.save(funko);
+                            } catch (SQLException throwables) {
+                                failed.set(true);
+                                String strError = "Error: " + throwables;
+                                logger.error(strError);
+                            } catch (FunkoNotValidException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        });
+
+                        if (failed.get()) {
+                            logger.error("Error al insertar los datos en la base de datos");
+                        }
                     });
-        } catch (IOException e) {
+        } catch (ReadCSVFailException e) {
             logger.error("Error al leer el CSV");
         }
     }
