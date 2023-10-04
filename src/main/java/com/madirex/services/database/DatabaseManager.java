@@ -258,7 +258,10 @@ public class DatabaseManager {
      *
      * @throws SQLException No se ha podido realizar la operación
      */
-    private void beginTransaction() throws SQLException {
+    public void beginTransaction() throws SQLException {
+        if (connection == null) {
+            this.open();
+        }
         connection.setAutoCommit(false);
     }
 
@@ -267,7 +270,7 @@ public class DatabaseManager {
      *
      * @throws SQLException No se ha podido realizar la operación
      */
-    private void commit() throws SQLException {
+    public void commit() throws SQLException {
         connection.commit();
         connection.setAutoCommit(true);
     }

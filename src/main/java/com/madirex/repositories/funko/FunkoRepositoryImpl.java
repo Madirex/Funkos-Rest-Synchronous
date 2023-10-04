@@ -48,6 +48,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     public List<Funko> findAll() throws SQLException {
         List<Funko> list = new ArrayList<>();
         var sql = "SELECT * FROM funko";
+        database.beginTransaction();
         var res = database.select(sql).orElseThrow();
         while (res.next()) {
             list.add(Funko.builder()
@@ -58,7 +59,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                     .releaseDate(res.getDate("fecha_lanzamiento").toLocalDate())
                     .build());
         }
-        database.close();
+        database.commit();
         return list;
     }
 
@@ -71,6 +72,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     @Override
     public Optional<Funko> findById(String id) throws SQLException {
         Optional<Funko> optReturn = Optional.empty();
+        database.beginTransaction();
         var sql = "SELECT * FROM funko WHERE cod = ?";
         var res = database.select(sql, id).orElseThrow();
         if (res.next()) {
@@ -82,7 +84,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                     .releaseDate(res.getDate("fecha_lanzamiento").toLocalDate())
                     .build());
         }
-        database.close();
+        database.commit();
         return optReturn;
     }
 
@@ -96,7 +98,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     public Optional<Funko> save(Funko entity) throws SQLException {
         var sql = "INSERT INTO funko (cod, nombre, modelo, precio, fecha_lanzamiento, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        database.open();
+        database.beginTransaction();
         database.insertAndGetKey(sql, entity.getCod().toString(),
                         entity.getName(),
                         entity.getModel().toString(),
@@ -105,7 +107,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                         LocalDateTime.now(),
                         LocalDateTime.now())
                 .orElseThrow();
-        database.close();
+        database.commit();
         return Optional.of(entity);
     }
 
@@ -118,9 +120,9 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     @Override
     public boolean delete(String id) throws SQLException {
         var sql = "DELETE FROM funko WHERE cod= ?";
-        database.open();
+        database.beginTransaction();
         var rs = database.delete(sql, id);
-        database.close();
+        database.commit();
         return (rs == 1);
     }
 
@@ -135,7 +137,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     public Optional<Funko> update(String id, Funko entity) throws SQLException {
         var sql = "UPDATE funko SET nombre = ?, modelo = ?, precio = ?, fecha_lanzamiento = ?, " +
                 "updated_at = ? WHERE cod = ?";
-        database.open();
+        database.beginTransaction();
         database.update(sql,
                 entity.getName(),
                 entity.getModel().toString(),
@@ -143,7 +145,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                 entity.getReleaseDate(),
                 LocalDateTime.now(),
                 id);
-        database.close();
+        database.commit();
         return Optional.of(entity);
     }
 

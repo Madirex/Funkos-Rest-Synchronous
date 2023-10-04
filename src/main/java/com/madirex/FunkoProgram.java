@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class FunkoProgram {
 
@@ -38,7 +39,7 @@ public class FunkoProgram {
     }
 
     public void init() {
-        System.out.println("Programa de Funkos iniciado.");
+        logger.info("Programa de Funkos iniciado.");
         loadFunkosFileAndInsertToDatabase("data" + File.separator + "funkos.csv");
         callAllServiceMethods();
     }
@@ -52,14 +53,16 @@ public class FunkoProgram {
             printSave("MadiFunko");
             printUpdate("MadiFunko", "MadiFunkoModified");
             printDelete("MadiFunkoModified");
+
             doBackupAndPrint("data");
+            DatabaseManager.getInstance().close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void printDelete(String name) throws SQLException {
-        System.out.println("\nDelete:");
+        logger.info("\nDelete:");
         try {
             controller.delete(controller.findByName(name).get(0).getCod().toString());
         } catch (FunkoException e) {
@@ -68,56 +71,56 @@ public class FunkoProgram {
     }
 
     private void printUpdate(String name, String newName) throws SQLException {
-        System.out.println("\nUpdate:");
+        logger.info("\nUpdate:");
         try {
             controller.update(controller.findByName(name).get(0).getCod().toString(), Funko.builder()
                     .name(newName)
                     .model(Model.DISNEY)
                     .price(42.42)
                     .releaseDate(LocalDate.now())
-                    .build()).ifPresent(System.out::println);
+                    .build()).ifPresent(e -> logger.info(e.toString()));
         } catch (FunkoException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void doBackupAndPrint(String rootFolderName) {
-        System.out.println("\nBackup:");
+        logger.info("\nBackup:");
         controller.backup(System.getProperty("user.dir") + File.separator + rootFolderName, "backup.json");
     }
 
     private void printSave(String name) throws SQLException {
         //SAVE
-        System.out.println("\nSave:");
+        logger.info("\nSave:");
         try {
             controller.save(Funko.builder()
                     .name(name)
                     .model(Model.OTROS)
                     .price(42)
                     .releaseDate(LocalDate.now())
-                    .build()).ifPresent(System.out::println);
+                    .build()).ifPresent(e -> logger.info(e.toString()));
         } catch (FunkoException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void printFindById(String id) throws SQLException {
-        System.out.println("\nFind by Id:");
+        logger.info("\nFind by Id:");
         try {
-            System.out.println(controller.findById(id));
+            controller.findById(id).ifPresent(e -> logger.info(e.toString()));
         } catch (FunkoNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void printFindByName(String name) throws SQLException {
-        System.out.println("\nFind by Name:");
-        controller.findByName(name).forEach(System.out::println);
+        logger.info("\nFind by Name:");
+        controller.findByName(name).forEach(e -> logger.info(e.toString()));
     }
 
     private void printFindAll() throws SQLException {
-        System.out.println("\nFind All:");
-        controller.findAll().forEach(System.out::println);
+        logger.info("\nFind All:");
+        controller.findAll().forEach(e -> logger.info(e.toString()));
     }
 
     public void loadFunkosFileAndInsertToDatabase(String path) {
@@ -128,11 +131,12 @@ public class FunkoProgram {
             csvFlux.subscribe(
                     line -> {
                         String[] parts = line.split(",");
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         Funko funko = Funko.builder()
                                 .name(parts[1])
                                 .model(Model.valueOf(parts[2]))
                                 .price(Double.parseDouble(parts[3]))
-                                .releaseDate(LocalDate.parse(parts[4]))
+                                .releaseDate(LocalDate.parse(parts[4], formatter))
                                 .build();
                         logger.info(String.valueOf(funko));
                     });
