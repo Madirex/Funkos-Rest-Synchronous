@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementación de la interfaz FunkoRepository
@@ -105,8 +106,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                         entity.getPrice(),
                         entity.getReleaseDate(),
                         LocalDateTime.now(),
-                        LocalDateTime.now())
-                .orElseThrow();
+                        LocalDateTime.now());
         database.commit();
         return Optional.of(entity);
     }
@@ -127,7 +127,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     }
 
     /**
-     * [Método deshabilitado]
+     * Actualiza un elemento del repositorio
      *
      * @param id     Id del elemento a actualizar
      * @param entity Elemento con los nuevos datos

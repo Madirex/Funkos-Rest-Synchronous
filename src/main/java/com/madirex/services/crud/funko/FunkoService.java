@@ -1,6 +1,7 @@
 package com.madirex.services.crud.funko;
 
 import com.madirex.exceptions.FunkoException;
+import com.madirex.exceptions.FunkoNotFoundException;
 import com.madirex.models.Funko;
 import com.madirex.services.crud.BaseCRUDService;
 
@@ -10,7 +11,7 @@ import java.util.List;
 
 public interface FunkoService extends BaseCRUDService<Funko, FunkoException>{
 
-    List<Funko> findByName(String nombre) throws SQLException;
+    List<Funko> findByName(String nombre) throws SQLException, FunkoNotFoundException;
 
     void backup(String path, String fileName) throws SQLException, IOException;
 

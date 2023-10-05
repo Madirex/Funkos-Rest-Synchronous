@@ -10,15 +10,11 @@ import com.madirex.services.database.DatabaseManager;
 import com.madirex.services.io.CsvManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FunkoProgram {
@@ -58,17 +54,25 @@ public class FunkoProgram {
             doBackupAndPrint("data");
             DatabaseManager.getInstance().close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            String strError = "Fallo SQL: " + e;
+            logger.error(strError);
         }
     }
 
     private void printDelete(String name) throws SQLException {
         logger.info("\nDelete:");
+
         try {
             controller.delete(controller.findByName(name).get(0).getCod().toString());
-        } catch (FunkoException e) {
-            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            String strError = "El Funko no se ha encontrado: " + e;
+            logger.error(strError);
+        } catch (FunkoNotRemovedException e) {
+            String strError = "El Funko no ha sido eliminado: " + e;
+            logger.error(strError);
         }
+
+
     }
 
     private void printUpdate(String name, String newName) throws SQLException {
@@ -80,8 +84,12 @@ public class FunkoProgram {
                     .price(42.42)
                     .releaseDate(LocalDate.now())
                     .build()).ifPresent(e -> logger.info(e.toString()));
-        } catch (FunkoException e) {
-            throw new RuntimeException(e);
+        } catch (FunkoNotValidException e) {
+            String strError = "El Funko no es válido: " + e;
+            logger.error(strError);
+        } catch (FunkoNotFoundException e) {
+            String strError = "El Funko no se ha encontrado: " + e;
+            logger.error(strError);
         }
     }
 
@@ -90,9 +98,11 @@ public class FunkoProgram {
         try {
             controller.backup(System.getProperty("user.dir") + File.separator + rootFolderName, "backup.json");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            String strError = "Fallo SQL: " + e;
+            logger.error(strError);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            String strError = "Error de Input/Output: " + e;
+            logger.error(strError);
         }
     }
 
@@ -100,14 +110,20 @@ public class FunkoProgram {
         //SAVE
         logger.info("\nSave:");
         try {
-            controller.save(Funko.builder()
-                    .name(name)
-                    .model(Model.OTROS)
-                    .price(42)
-                    .releaseDate(LocalDate.now())
-                    .build()).ifPresent(e -> logger.info(e.toString()));
-        } catch (FunkoException e) {
-            throw new RuntimeException(e);
+            try {
+                controller.save(Funko.builder()
+                        .name(name)
+                        .model(Model.OTROS)
+                        .price(42)
+                        .releaseDate(LocalDate.now())
+                        .build()).ifPresent(e -> logger.info(e.toString()));
+            } catch (FunkoNotValidException e) {
+                String strError = "El Funko no es válido: " + e;
+                logger.error(strError);
+            }
+        } catch (FunkoNotSavedException e) {
+            String strError = "No se ha podido guardar el Funko: " + e;
+            logger.error(strError);
         }
     }
 
@@ -116,7 +132,8 @@ public class FunkoProgram {
         try {
             controller.findById(id).ifPresent(e -> logger.info(e.toString()));
         } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
+            String strError = "No se ha encontrado el Funko con id " + id + " -> " + e;
+            logger.error(strError);
         }
     }
 
@@ -125,13 +142,19 @@ public class FunkoProgram {
         try {
             controller.findByName(name).forEach(e -> logger.info(e.toString()));
         } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
+            String strError = "No se han encontrado Funkos: " + e;
+            logger.error(strError);
         }
     }
 
     private void printFindAll() throws SQLException {
         logger.info("\nFind All:");
-        controller.findAll().forEach(e -> logger.info(e.toString()));
+        try {
+            controller.findAll().forEach(e -> logger.info(e.toString()));
+        } catch (FunkoNotFoundException e) {
+            String strError = "No se han encontrado Funkos: " + e;
+            logger.error(strError);
+        }
     }
 
     public void loadFunkosFileAndInsertToDatabase(String path) {
@@ -147,11 +170,14 @@ public class FunkoProgram {
                                 failed.set(true);
                                 String strError = "Error: " + throwables;
                                 logger.error(strError);
-                            } catch (FunkoNotValidException | FunkoNotSavedException ex) {
-                                throw new RuntimeException(ex);
+                            } catch (FunkoNotValidException ex1) {
+                                String strError = "El Funko no es válido: " + ex1;
+                                logger.error(strError);
+                            } catch (FunkoNotSavedException ex2) {
+                                String strError = "El Funko no se ha guardado: " + ex2;
+                                logger.error(strError);
                             }
                         });
-
                         if (failed.get()) {
                             logger.error("Error al insertar los datos en la base de datos");
                         }

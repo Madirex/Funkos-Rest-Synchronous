@@ -1,6 +1,7 @@
 package com.madirex.controllers;
 
 import com.madirex.exceptions.FunkoNotFoundException;
+import com.madirex.exceptions.FunkoNotRemovedException;
 import com.madirex.exceptions.FunkoNotSavedException;
 import com.madirex.exceptions.FunkoNotValidException;
 import com.madirex.models.Funko;
@@ -23,7 +24,7 @@ public class FunkoController implements BaseController<Funko> {
         this.funkoService = funkoService;
     }
 
-    public List<Funko> findAll() throws SQLException {
+    public List<Funko> findAll() throws SQLException, FunkoNotFoundException {
         logger.debug("FindAll");
         return funkoService.findAll();
     }
@@ -31,18 +32,12 @@ public class FunkoController implements BaseController<Funko> {
     public Optional<Funko> findById(String id) throws SQLException, FunkoNotFoundException {
         String msg = "FindById " + id;
         logger.debug(msg);
-        return Optional.of(funkoService.findById(id)).orElseThrow(() ->
-                new FunkoNotFoundException("No se ha encontrado el Funko con id " + id));
+        return funkoService.findById(id);
     }
 
     public List<Funko> findByName(String name) throws SQLException, FunkoNotFoundException {
         String msg = "FindByName " + name;
         logger.debug(msg);
-
-        List<Funko> list = funkoService.findByName(name);
-        if (list.isEmpty()) {
-            throw new FunkoNotFoundException("No se ha encontrado el Funko con nombre " + name);
-        }
         return funkoService.findByName(name);
     }
 
@@ -50,25 +45,28 @@ public class FunkoController implements BaseController<Funko> {
         String msg = "Save " + funko;
         logger.debug(msg);
         FunkoValidator.validate(funko);
-        return Optional.of(funkoService.save(funko).orElseThrow(() ->
-                new FunkoNotSavedException("No se ha podido guardar el Funko")));
+        return funkoService.save(funko);
     }
 
     public Optional<Funko> update(String id, Funko funko) throws FunkoNotValidException, SQLException {
         String msg = "Update " + funko;
         logger.debug(msg);
         FunkoValidator.validate(funko);
-        return Optional.of(funkoService.update(id, funko).orElseThrow(() ->
-                new FunkoNotValidException("No se ha actualizado el Funko con id " + id)));
+        return funkoService.update(id, funko);
     }
 
-    public Optional<Funko> delete(String id) throws SQLException, FunkoNotFoundException {
+    public Optional<Funko> delete(String id) throws SQLException, FunkoNotFoundException, FunkoNotRemovedException {
         String msg = "Delete " + id;
+        boolean removed = false;
         logger.debug(msg);
-        var funko = funkoService.findById(id).orElseThrow(() ->
-                new FunkoNotFoundException("No se ha encontrado el Funko con id " + id));
-        funkoService.delete(id);
-        return Optional.of(funko);
+        var funko = funkoService.findById(id);
+        if (funko.isPresent()){
+            removed = funkoService.delete(id);
+        }
+        if (!removed){
+            return Optional.empty();
+        }
+        return funko;
     }
 
     public void backup(String url, String fileName) throws SQLException, IOException {

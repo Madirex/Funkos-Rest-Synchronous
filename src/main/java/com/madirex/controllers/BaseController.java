@@ -13,7 +13,7 @@ import java.util.Optional;
  * @param <T> Entity
  */
 public interface BaseController<T> {
-    List<T> findAll() throws SQLException;
+    List<T> findAll() throws SQLException, FunkoNotFoundException;
 
     Optional<T> findById(String id) throws SQLException, FunkoNotFoundException;
 

@@ -2,6 +2,10 @@ package com.madirex.services.crud.funko;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.madirex.exceptions.FunkoNotFoundException;
+import com.madirex.exceptions.FunkoNotRemovedException;
+import com.madirex.exceptions.FunkoNotSavedException;
+import com.madirex.exceptions.FunkoNotValidException;
 import com.madirex.models.Funko;
 import com.madirex.repositories.funko.FunkoRepository;
 import com.madirex.utils.LocalDateAdapter;
@@ -44,13 +48,17 @@ public class FunkoServiceImpl implements FunkoService {
 
     @Override
     public List<Funko> findAll() throws SQLException {
-        logger.debug("Obteniendo todos los funkos");
+        logger.debug("Obteniendo todos los Funkos");
         return funkoRepository.findAll();
     }
 
     @Override
-    public List<Funko> findByName(String name) throws SQLException {
-        logger.debug("Obteniendo todos los funkos ordenados por nombre");
+    public List<Funko> findByName(String name) throws SQLException, FunkoNotFoundException {
+        logger.debug("Obteniendo todos los Funkos ordenados por nombre");
+        var list = funkoRepository.findByName(name);
+        if (list.isEmpty()) {
+            throw new FunkoNotFoundException("No se ha encontrado el Funko con nombre " + name);
+        }
         return funkoRepository.findByName(name);
     }
 
@@ -69,49 +77,47 @@ public class FunkoServiceImpl implements FunkoService {
             Files.writeString(new File(dest).toPath(), json);
             logger.debug("Backup realizado con éxito");
         } else {
-            //TODO: Exception
             logger.error("El directorio del backup es un directorio no válido. No se creará el backup.");
         }
     }
 
     @Override
-    public Optional<Funko> findById(String id) throws SQLException {
-        logger.debug("Obteniendo funko por id");
+    public Optional<Funko> findById(String id) throws SQLException, FunkoNotFoundException {
+        logger.debug("Obteniendo Funko por id");
         Funko funko = cache.get(id);
         if (funko != null) {
             logger.debug("Funko encontrado en caché");
             return Optional.of(funko);
-        } else {
-            logger.debug("Funko no encontrado en caché, buscando en base de datos");
-            var optional = funkoRepository.findById(id);
-            optional.ifPresent(value -> cache.put(id, value));
-            return optional;
         }
+        logger.debug("Funko no encontrado en caché, buscando en base de datos");
+        return Optional.ofNullable(cache.put(id, funkoRepository.findById(id).orElseThrow(() ->
+                new FunkoNotFoundException("No se ha encontrado el Funko con id " + id))));
     }
 
     @Override
-    public Optional<Funko> save(Funko funko) throws SQLException {
-        Optional<Funko> modified;
-        logger.debug("Guardando funko");
-        modified = funkoRepository.save(funko);
+    public Optional<Funko> save(Funko funko) throws SQLException, FunkoNotSavedException {
+        logger.debug("Guardando Funko");
         cache.put(funko.getCod().toString(), funko);
-        return modified;
+        return Optional.of(funkoRepository.save(funko).orElseThrow(() ->
+                new FunkoNotSavedException("No se ha podido guardar el Funko")));
     }
 
     @Override
-    public Optional<Funko> update(String funkoId, Funko newFunko) throws SQLException {
-        Optional<Funko> modified;
-        logger.debug("Actualizando funko");
-        modified = funkoRepository.update(funkoId, newFunko);
+    public Optional<Funko> update(String funkoId, Funko newFunko) throws SQLException, FunkoNotValidException {
+        logger.debug("Actualizando Funko");
         cache.put(newFunko.getCod().toString(), newFunko);
-        return modified;
+        return Optional.of(funkoRepository.update(funkoId, newFunko).orElseThrow(() ->
+                new FunkoNotValidException("No se ha actualizado el Funko con id " + funkoId)));
     }
 
     @Override
-    public boolean delete(String id) throws SQLException {
+    public boolean delete(String id) throws SQLException, FunkoNotRemovedException {
         boolean removed;
-        logger.debug("Eliminando funko");
+        logger.debug("Eliminando Funko");
         removed = funkoRepository.delete(id);
+        if (!removed){
+            throw new FunkoNotRemovedException("No se ha encontrado el Funko con id " + id);
+        }
         return removed;
     }
 }
