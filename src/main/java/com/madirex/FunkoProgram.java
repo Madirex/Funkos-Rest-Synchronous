@@ -1,10 +1,7 @@
 package com.madirex;
 
 import com.madirex.controllers.FunkoController;
-import com.madirex.exceptions.FunkoException;
-import com.madirex.exceptions.FunkoNotFoundException;
-import com.madirex.exceptions.FunkoNotValidException;
-import com.madirex.exceptions.ReadCSVFailException;
+import com.madirex.exceptions.*;
 import com.madirex.models.Funko;
 import com.madirex.models.Model;
 import com.madirex.repositories.funko.FunkoRepositoryImpl;
@@ -90,7 +87,13 @@ public class FunkoProgram {
 
     private void doBackupAndPrint(String rootFolderName) {
         logger.info("\nBackup:");
-        controller.backup(System.getProperty("user.dir") + File.separator + rootFolderName, "backup.json");
+        try {
+            controller.backup(System.getProperty("user.dir") + File.separator + rootFolderName, "backup.json");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void printSave(String name) throws SQLException {
@@ -119,7 +122,11 @@ public class FunkoProgram {
 
     private void printFindByName(String name) throws SQLException {
         logger.info("\nFind by Name:");
-        controller.findByName(name).forEach(e -> logger.info(e.toString()));
+        try {
+            controller.findByName(name).forEach(e -> logger.info(e.toString()));
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void printFindAll() throws SQLException {
@@ -140,7 +147,7 @@ public class FunkoProgram {
                                 failed.set(true);
                                 String strError = "Error: " + throwables;
                                 logger.error(strError);
-                            } catch (FunkoNotValidException ex) {
+                            } catch (FunkoNotValidException | FunkoNotSavedException ex) {
                                 throw new RuntimeException(ex);
                             }
                         });

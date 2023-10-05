@@ -1,12 +1,10 @@
 package com.madirex.controllers;
 
-import com.madirex.exceptions.FunkoException;
 import com.madirex.exceptions.FunkoNotFoundException;
+import com.madirex.exceptions.FunkoNotSavedException;
 import com.madirex.exceptions.FunkoNotValidException;
 import com.madirex.models.Funko;
-import com.madirex.repositories.funko.FunkoRepository;
 import com.madirex.services.crud.funko.FunkoService;
-import com.madirex.services.database.DatabaseManager;
 import com.madirex.validators.FunkoValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +14,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-public class FunkoController implements BaseController<Funko>{
-    private final Logger logger = LoggerFactory.getLogger(DatabaseManager.class);
+public class FunkoController implements BaseController<Funko> {
+    private final Logger logger = LoggerFactory.getLogger(FunkoController.class);
 
     private final FunkoService funkoService;
 
@@ -33,58 +31,47 @@ public class FunkoController implements BaseController<Funko>{
     public Optional<Funko> findById(String id) throws SQLException, FunkoNotFoundException {
         String msg = "FindById " + id;
         logger.debug(msg);
-        return funkoService.findById(id);
+        return Optional.of(funkoService.findById(id)).orElseThrow(() ->
+                new FunkoNotFoundException("No se ha encontrado el Funko con id " + id));
     }
 
-    public List<Funko> findByName(String name) throws SQLException {
+    public List<Funko> findByName(String name) throws SQLException, FunkoNotFoundException {
         String msg = "FindByName " + name;
         logger.debug(msg);
+
+        List<Funko> list = funkoService.findByName(name);
+        if (list.isEmpty()) {
+            throw new FunkoNotFoundException("No se ha encontrado el Funko con nombre " + name);
+        }
         return funkoService.findByName(name);
     }
 
-    public Optional<Funko> save(Funko funko) throws SQLException, FunkoNotValidException {
+    public Optional<Funko> save(Funko funko) throws SQLException, FunkoNotSavedException, FunkoNotValidException {
         String msg = "Save " + funko;
         logger.debug(msg);
         FunkoValidator.validate(funko);
-        try {
-            return funkoService.save(funko);
-        } catch (FunkoException e) {
-            throw new RuntimeException(e);
-        }
+        return Optional.of(funkoService.save(funko).orElseThrow(() ->
+                new FunkoNotSavedException("No se ha podido guardar el Funko")));
     }
 
-    public Optional<Funko> update(String id, Funko funko) throws SQLException, FunkoNotValidException,
-            FunkoNotFoundException {
+    public Optional<Funko> update(String id, Funko funko) throws FunkoNotValidException, SQLException {
         String msg = "Update " + funko;
         logger.debug(msg);
         FunkoValidator.validate(funko);
-        try {
-            return funkoService.update(id, funko);
-        } catch (FunkoException e) {
-            throw new RuntimeException(e);
-        }
+        return Optional.of(funkoService.update(id, funko).orElseThrow(() ->
+                new FunkoNotValidException("No se ha actualizado el Funko con id " + id)));
     }
 
     public Optional<Funko> delete(String id) throws SQLException, FunkoNotFoundException {
         String msg = "Delete " + id;
         logger.debug(msg);
         var funko = funkoService.findById(id).orElseThrow(() ->
-                new FunkoNotFoundException("No se ha encontrado el funko con id " + id));
-        try {
-            funkoService.delete(id);
-        } catch (FunkoException e) {
-            throw new RuntimeException(e);
-        }
+                new FunkoNotFoundException("No se ha encontrado el Funko con id " + id));
+        funkoService.delete(id);
         return Optional.of(funko);
     }
 
-    public void backup(String url, String fileName) {
-        try {
-            funkoService.backup(url, fileName);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void backup(String url, String fileName) throws SQLException, IOException {
+        funkoService.backup(url, fileName);
     }
 }

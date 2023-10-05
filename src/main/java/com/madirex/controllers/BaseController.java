@@ -1,5 +1,6 @@
 package com.madirex.controllers;
 
+import com.madirex.exceptions.FunkoException;
 import com.madirex.exceptions.FunkoNotFoundException;
 import com.madirex.exceptions.FunkoNotValidException;
 
@@ -16,11 +17,11 @@ public interface BaseController<T> {
 
     Optional<T> findById(String id) throws SQLException, FunkoNotFoundException;
 
-    List<T> findByName(String name) throws SQLException;
+    List<T> findByName(String name) throws SQLException, FunkoNotFoundException;
 
-    Optional<T> save(T entity) throws SQLException, FunkoNotValidException;
+    Optional<T> save(T entity) throws SQLException, FunkoException;
 
-    Optional<T> update(String id, T entity) throws SQLException, FunkoNotValidException, FunkoNotFoundException;
+    Optional<T> update(String id, T entity) throws SQLException, FunkoException;
 
-    Optional<T> delete(String id) throws SQLException, FunkoNotFoundException;
+    Optional<T> delete(String id) throws SQLException, FunkoException;
 }

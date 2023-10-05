@@ -9,8 +9,8 @@ public interface BaseCRUDService<I, E extends Throwable> {
 
     Optional<I> findById(String id) throws SQLException;
 
-    Optional<I> save(I item) throws SQLException, E;
+    Optional<I> save(I item) throws SQLException;
 
-    Optional<I> update(String id, I newI) throws SQLException, E;
-    boolean delete(String id) throws SQLException, E;
+    Optional<I> update(String id, I newI) throws SQLException;
+    boolean delete(String id) throws SQLException;
 }
