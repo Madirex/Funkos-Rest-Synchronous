@@ -1,5 +1,6 @@
 package com.madirex.models;
 
+import com.madirex.utils.Utils;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,4 +16,15 @@ public class Funko {
     private Model model;
     private double price;
     private LocalDate releaseDate;
+
+    @Override
+    public String toString() {
+        return "Funko:" +
+                "\n\tCod=" + cod +
+                "\n\tNombre='" + name + '\'' +
+                "\n\tModelo=" + model +
+                "\n\tPrecio=" + Utils.getInstance().doubleToESLocal(price) +
+                "\n\tFecha lanzamiento=" + releaseDate +
+                '\n';
+    }
 }
