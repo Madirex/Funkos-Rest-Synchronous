@@ -37,20 +37,39 @@ public class FunkoProgram {
 
     public void init() {
         logger.info("Programa de Funkos iniciado.");
+        callAllServiceExceptionMethods();
         loadFunkosFileAndInsertToDatabase("data" + File.separator + "funkos.csv");
         callAllServiceMethods();
     }
 
+    private void callAllServiceExceptionMethods() {
+        try {
+            logger.info("🔴 Probando casos incorrectos 🔴");
+            //TODO: Print Find All
+            logger.info("Probando caso incorrecto de FindById...");
+            printFindById("NoExiste"); //TODO: TEST
+            logger.info("Probando caso incorrecto de FindByName...");
+            printFindByName("NoExiste"); //TODO: TEST
+            //TODO: Print Save
+            //TODO: Print Update
+            //logger.info("Probando caso incorrecto de Eliminación...");
+            //printDelete("NoExiste");
+            //TODO: EL delete no comprueba bien la exception
+        } catch (SQLException e) {
+            String strError = "Fallo SQL: " + e;
+            logger.error(strError);
+        }
+    }
+
     private void callAllServiceMethods() {
         try {
-            //Casos correctos
+            logger.info("🟢 Probando casos correctos 🟢");
             printFindAll();
-            printFindByName("Doctor Who Tardis");
             printFindById("3b6c6f58-7c6b-434b-82ab-01b2d6e4434a");
+            printFindByName("Doctor Who Tardis");
             printSave("MadiFunko");
             printUpdate("MadiFunko", "MadiFunkoModified");
             printDelete("MadiFunkoModified");
-
             doBackupAndPrint("data");
             DatabaseManager.getInstance().close();
         } catch (SQLException e) {
