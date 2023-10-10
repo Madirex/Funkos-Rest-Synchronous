@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FunkoProgram {
@@ -37,24 +38,80 @@ public class FunkoProgram {
 
     public void init() {
         logger.info("Programa de Funkos iniciado.");
-        callAllServiceExceptionMethods();
         loadFunkosFileAndInsertToDatabase("data" + File.separator + "funkos.csv");
+        callAllServiceExceptionMethods();
         callAllServiceMethods();
+        databaseQueries();
+    }
+
+    private void databaseQueries() {
+        logger.info("Funko más caro:");
+        //printExpensiveFunko();
+        logger.info("Media de precio de Funkos:");
+        //printAvgPriceOfFunkos();
+        logger.info("Funkos agrupados por modelos:");
+        //printFunkosGroupedByModels();
+        logger.info("Número de Funkos por modelos:");
+        //printNumberOfFunkosByModels();
+        logger.info("Funkos que han sido lanzados en 2023:");
+        //printFunkosReleasedIn(2023);
+        logger.info("Número de Funkos de Stitch:");
+        //printNumberOfFunkosOfName("Stitch");
+        logger.info("Listado de Funkos de Stitch:");
+        //printListOfFunkosOfName("Stitch");
+    }
+
+    private void printFunkosGroupedByModels() {
+//        try {
+//            //TODO: DO
+//            //controller.findAll().stream().flatMap()
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        } catch (FunkoNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+    }
+
+    private void printAvgPriceOfFunkos() {
+        try {
+            controller.findAll().stream().mapToDouble(Funko::getPrice).average()
+                    .ifPresent(e -> logger.info(String.valueOf(e)));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void printExpensiveFunko() {
+        try {
+            controller.findAll().stream().max(Comparator.comparingDouble(Funko::getPrice))
+                    .ifPresent(e -> logger.info(e.toString()));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void callAllServiceExceptionMethods() {
         try {
             logger.info("🔴 Probando casos incorrectos 🔴");
-            //TODO: Print Find All
-            logger.info("Probando caso incorrecto de FindById...");
-            printFindById("NoExiste"); //TODO: TEST
-            logger.info("Probando caso incorrecto de FindByName...");
-            printFindByName("NoExiste"); //TODO: TEST
-            //TODO: Print Save
-            //TODO: Print Update
-            //logger.info("Probando caso incorrecto de Eliminación...");
-            //printDelete("NoExiste");
-            //TODO: EL delete no comprueba bien la exception
+            logger.info("🔴 Probando caso incorrecto de FindById:");
+            printFindById("569689dd-b76b-465b-aa32-a6c46acd38fd");
+            logger.info("🔴 Probando caso incorrecto de FindByName:");
+            printFindByName("NoExiste");
+            logger.info("🔴 Probando caso incorrecto de Save:");
+            printSave(Funko.builder()
+                    .name("MadiFunko2")
+                    .model(Model.OTROS)
+                    .price(-42)
+                    .releaseDate(LocalDate.now())
+                    .build());
+            logger.info("🔴 Probando caso incorrecto de Update:");
+            printUpdate("One Piece Luffy", "");
+            logger.info("🔴 Probando caso incorrecto de Delete:");
+            printDelete("NoExiste");
         } catch (SQLException e) {
             String strError = "Fallo SQL: " + e;
             logger.error(strError);
@@ -64,12 +121,24 @@ public class FunkoProgram {
     private void callAllServiceMethods() {
         try {
             logger.info("🟢 Probando casos correctos 🟢");
+            logger.info("🟢 Probando caso correcto de FindAll:");
             printFindAll();
+            logger.info("🟢 Probando caso correcto de FindById:");
             printFindById("3b6c6f58-7c6b-434b-82ab-01b2d6e4434a");
+            logger.info("🟢 Probando caso correcto de FindByName:");
             printFindByName("Doctor Who Tardis");
-            printSave("MadiFunko");
+            logger.info("🟢 Probando caso correcto de Save:");
+            printSave(Funko.builder()
+                    .name("MadiFunko")
+                    .model(Model.OTROS)
+                    .price(42)
+                    .releaseDate(LocalDate.now())
+                    .build());
+            logger.info("🟢 Probando caso correcto de Update:");
             printUpdate("MadiFunko", "MadiFunkoModified");
+            logger.info("🟢 Probando caso correcto de Delete:");
             printDelete("MadiFunkoModified");
+            logger.info("🟢 Copia de seguridad:");
             doBackupAndPrint("data");
             DatabaseManager.getInstance().close();
         } catch (SQLException e) {
@@ -125,17 +194,12 @@ public class FunkoProgram {
         }
     }
 
-    private void printSave(String name) throws SQLException {
+    private void printSave(Funko funko) throws SQLException {
         //SAVE
         logger.info("\nSave:");
         try {
             try {
-                controller.save(Funko.builder()
-                        .name(name)
-                        .model(Model.OTROS)
-                        .price(42)
-                        .releaseDate(LocalDate.now())
-                        .build()).ifPresent(e -> logger.info(e.toString()));
+                controller.save(funko).ifPresent(e -> logger.info(e.toString()));
             } catch (FunkoNotValidException e) {
                 String strError = "El Funko no es válido: " + e;
                 logger.error(strError);
