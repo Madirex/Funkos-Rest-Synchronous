@@ -21,17 +21,29 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+/**
+ * Clase FunkoProgram que contiene el programa principal
+ */
 public class FunkoProgram {
 
     private static FunkoProgram funkoProgramInstance;
     private final Logger logger = LoggerFactory.getLogger(FunkoProgram.class);
     private FunkoController controller;
 
+    /**
+     * Constructor privado para evitar la creación de instancia
+     * SINGLETON
+     */
     private FunkoProgram() {
         controller = new FunkoController(new FunkoServiceImpl(FunkoRepositoryImpl
                 .getInstance(DatabaseManager.getInstance())));
     }
 
+    /**
+     * SINGLETON - Este método devuelve una instancia de la clase FunkoProgram
+     *
+     * @return Instancia de la clase FunkoProgram
+     */
     public static FunkoProgram getInstance() {
         if (funkoProgramInstance == null) {
             funkoProgramInstance = new FunkoProgram();
@@ -39,6 +51,9 @@ public class FunkoProgram {
         return funkoProgramInstance;
     }
 
+    /**
+     * Inicia el programa
+     */
     public void init() {
         logger.info("Programa de Funkos iniciado.");
         loadFunkosFileAndInsertToDatabase("data" + File.separator + "funkos.csv");
@@ -48,102 +63,9 @@ public class FunkoProgram {
         DatabaseManager.getInstance().close();
     }
 
-    private void databaseQueries() {
-        logger.info("🔵 Funko más caro:");
-        printExpensiveFunko();
-        logger.info("🔵 Media de precio de Funkos:");
-        printAvgPriceOfFunkos();
-        logger.info("🔵 Funkos agrupados por modelos:");
-        printFunkosGroupedByModels();
-        logger.info("🔵 Número de Funkos por modelos:");
-        printNumberOfFunkosByModels();
-        logger.info("🔵 Funkos que han sido lanzados en 2023:");
-        printFunkosReleasedIn(2023);
-        logger.info("🔵 Número de Funkos de Stitch:");
-        printNumberOfFunkosOfName("Stitch");
-        logger.info("🔵 Listado de Funkos de Stitch:");
-        printListOfFunkosOfName("Stitch");
-    }
-
-    private void printListOfFunkosOfName(String name) {
-        try {
-            controller.findAll().stream().filter(e -> e.getName().startsWith(name))
-                    .forEach(e -> logger.info(e.toString()));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void printNumberOfFunkosOfName(String name) {
-        try {
-            logger.info(String.valueOf(controller.findAll().stream().filter(e -> e.getName().startsWith(name)).count()));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void printFunkosReleasedIn(int i) {
-        try {
-            controller.findAll().stream().filter(e -> e.getReleaseDate().getYear() == i)
-                    .forEach(e -> logger.info(e.toString()));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void printNumberOfFunkosByModels() {
-        try {
-            controller.findAll().stream().collect(Collectors.groupingBy(Funko::getModel, Collectors.counting()))
-                    .forEach((model, count) -> logger.info("🔵 " + model + " -> " + count));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void printFunkosGroupedByModels() {
-        try {
-            Map<Model, List<Funko>> s = controller.findAll().stream().collect(Collectors.groupingBy(Funko::getModel));
-            s.forEach((model, funkoList) -> {
-                logger.info("\n🔵 Modelo: " + model);
-                funkoList.forEach(funko -> logger.info(funko.toString()));
-            });
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void printAvgPriceOfFunkos() {
-        try {
-            controller.findAll().stream().mapToDouble(Funko::getPrice).average()
-                    .ifPresent(e -> logger.info(String.format("%.2f", e)));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void printExpensiveFunko() {
-        try {
-            controller.findAll().stream().max(Comparator.comparingDouble(Funko::getPrice))
-                    .ifPresent(e -> logger.info(e.toString()));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (FunkoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * Lanzar excepciones de los métodos service
+     */
     private void callAllServiceExceptionMethods() {
         try {
             logger.info("🔴 Probando casos incorrectos 🔴");
@@ -168,6 +90,9 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Llama a todos los métodos de la clase FunkoService
+     */
     private void callAllServiceMethods() {
         try {
             logger.info("🟢 Probando casos correctos 🟢");
@@ -196,9 +121,140 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Consultas a la base de datos
+     */
+    private void databaseQueries() {
+        logger.info("🔵 Funko más caro:");
+        printExpensiveFunko();
+        logger.info("🔵 Media de precio de Funkos:");
+        printAvgPriceOfFunkos();
+        logger.info("🔵 Funkos agrupados por modelos:");
+        printFunkosGroupedByModels();
+        logger.info("🔵 Número de Funkos por modelos:");
+        printNumberOfFunkosByModels();
+        logger.info("🔵 Funkos que han sido lanzados en 2023:");
+        printFunkosReleasedIn(2023);
+        logger.info("🔵 Número de Funkos de Stitch:");
+        printNumberOfFunkosOfName("Stitch");
+        logger.info("🔵 Listado de Funkos de Stitch:");
+        printListOfFunkosOfName("Stitch");
+    }
+
+    /**
+     * Imprime una lista de Funkos que contengan el nombre pasado por parámetro
+     *
+     * @param name Nombre del Funko
+     */
+    private void printListOfFunkosOfName(String name) {
+        try {
+            controller.findAll().stream().filter(e -> e.getName().startsWith(name))
+                    .forEach(e -> logger.info(e.toString()));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Imprime el número de los Funkos dado un nombre
+     *
+     * @param name Nombre de los Funkos
+     */
+    private void printNumberOfFunkosOfName(String name) {
+        try {
+            logger.info(String.valueOf(controller.findAll().stream().filter(e -> e.getName().startsWith(name)).count()));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Imprime los Funkos lanzados en i
+     *
+     * @param i Año
+     */
+    private void printFunkosReleasedIn(int i) {
+        try {
+            controller.findAll().stream().filter(e -> e.getReleaseDate().getYear() == i)
+                    .forEach(e -> logger.info(e.toString()));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Imprime el número de Funkos por modelo
+     */
+    private void printNumberOfFunkosByModels() {
+        try {
+            controller.findAll().stream().collect(Collectors.groupingBy(Funko::getModel, Collectors.counting()))
+                    .forEach((model, count) -> logger.info("🔵 " + model + " -> " + count));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Imprime los Funkos agrupados por modelos
+     */
+    private void printFunkosGroupedByModels() {
+        try {
+            Map<Model, List<Funko>> s = controller.findAll().stream().collect(Collectors.groupingBy(Funko::getModel));
+            s.forEach((model, funkoList) -> {
+                logger.info("\n🔵 Modelo: " + model);
+                funkoList.forEach(funko -> logger.info(funko.toString()));
+            });
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Imprime la media de precio de los Funkos
+     */
+    private void printAvgPriceOfFunkos() {
+        try {
+            controller.findAll().stream().mapToDouble(Funko::getPrice).average()
+                    .ifPresent(e -> logger.info(String.format("%.2f", e)));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Imprime el Funko más caro
+     */
+    private void printExpensiveFunko() {
+        try {
+            controller.findAll().stream().max(Comparator.comparingDouble(Funko::getPrice))
+                    .ifPresent(e -> logger.info(e.toString()));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (FunkoNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Elimina un Funko y lo imprime
+     *
+     * @param name Nombre del Funko
+     * @throws SQLException Excepción SQL
+     */
     private void printDelete(String name) throws SQLException {
         logger.info("\nDelete:");
-
         try {
             controller.delete(controller.findByName(name).get(0).getCod().toString());
         } catch (FunkoNotFoundException e) {
@@ -210,6 +266,13 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Actualiza el nombre de un Funko y lo imprime
+     *
+     * @param name    Nombre del Funko
+     * @param newName Nuevo nombre del Funko
+     * @throws SQLException Excepción SQL
+     */
     private void printUpdate(String name, String newName) throws SQLException {
         logger.info("\nUpdate:");
         try {
@@ -228,6 +291,11 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Realiza una copia de seguridad de la base de datos y la imprime
+     *
+     * @param rootFolderName Nombre de la carpeta raíz
+     */
     private void doBackupAndPrint(String rootFolderName) {
         logger.info("\nBackup:");
         try {
@@ -241,8 +309,13 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Guarda en la base de datos el Funko pasado por parámetro y lo imprime
+     *
+     * @param funko Funko a imprimir
+     * @throws SQLException Excepción SQL
+     */
     private void printSave(Funko funko) throws SQLException {
-        //SAVE
         logger.info("\nSave:");
         try {
             try {
@@ -257,6 +330,12 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Imprime el Funko dado un ID
+     *
+     * @param id Id del Funko
+     * @throws SQLException Excepción SQL
+     */
     private void printFindById(String id) throws SQLException {
         logger.info("\nFind by Id:");
         try {
@@ -267,6 +346,12 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Imprime los Funkos que tengan el nombre pasado por parámetro
+     *
+     * @param name Nombre de los Funkos
+     * @throws SQLException Excepción SQL
+     */
     private void printFindByName(String name) throws SQLException {
         logger.info("\nFind by Name:");
         try {
@@ -277,6 +362,11 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Imprime todos los Funkos
+     *
+     * @throws SQLException Excepción SQL
+     */
     private void printFindAll() throws SQLException {
         logger.info("\nFind All:");
         try {
@@ -287,6 +377,11 @@ public class FunkoProgram {
         }
     }
 
+    /**
+     * Lee un archivo CSV y lo inserta en la base de datos
+     *
+     * @param path Ruta del archivo CSV
+     */
     public void loadFunkosFileAndInsertToDatabase(String path) {
         AtomicBoolean failed = new AtomicBoolean(false);
         CsvManager csvManager = CsvManager.getInstance();

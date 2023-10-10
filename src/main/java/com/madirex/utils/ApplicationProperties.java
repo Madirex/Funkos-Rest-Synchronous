@@ -23,13 +23,14 @@ public class ApplicationProperties {
         try {
             properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
         } catch (IOException ex) {
-            Logger.getLogger(getClass().getName()).log(Level.ALL,ex,
+            Logger.getLogger(getClass().getName()).log(Level.ALL, ex,
                     () -> "IOException - Error al leer el fichero de propiedades.");
         }
     }
 
     /**
      * SINGLETON - Este método devuelve una instancia de la clase ApplicationProperties
+     *
      * @return Instancia de la clase ApplicationProperties
      */
     public static ApplicationProperties getInstance() {
@@ -41,6 +42,7 @@ public class ApplicationProperties {
 
     /**
      * Devuelve el valor de una clave del fichero de propiedades
+     *
      * @param keyName Nombre de la clave
      * @return Valor de la clave
      */

@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-public interface FunkoService extends BaseCRUDService<Funko, FunkoException>{
+/**
+ * Interfaz que define las operaciones CRUD de FunkoService
+ */
+public interface FunkoService extends BaseCRUDService<Funko, FunkoException> {
 
     List<Funko> findByName(String nombre) throws SQLException, FunkoNotFoundException;
 

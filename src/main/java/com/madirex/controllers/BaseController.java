@@ -2,7 +2,6 @@ package com.madirex.controllers;
 
 import com.madirex.exceptions.FunkoException;
 import com.madirex.exceptions.FunkoNotFoundException;
-import com.madirex.exceptions.FunkoNotValidException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.Optional;
 
 /**
  * Controlador base
+ *
  * @param <T> Entity
  */
 public interface BaseController<T> {

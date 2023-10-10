@@ -100,7 +100,6 @@ public class DatabaseManager {
 
     /**
      * Cierra la conexión con el servidor de base de datos
-     *
      */
     public void close() {
         try {

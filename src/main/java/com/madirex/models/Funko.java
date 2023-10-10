@@ -7,6 +7,9 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Modelo Funko
+ */
 @Data
 @Builder
 public class Funko {
@@ -17,6 +20,9 @@ public class Funko {
     private double price;
     private LocalDate releaseDate;
 
+    /**
+     * Constructor
+     */
     @Override
     public String toString() {
         return "Funko:" +

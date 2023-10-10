@@ -49,6 +49,7 @@ public class CsvManager {
      *
      * @param path Ruta del archivo CSV
      * @return Optional de la lista de Funko
+     * @throws ReadCSVFailException Excepción al leer el archivo CSV
      */
     public Optional<List<Funko>> fileToFunkoList(String path) throws ReadCSVFailException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -73,6 +74,8 @@ public class CsvManager {
 
     /**
      * Crea la carpeta out si no existe
+     *
+     * @throws CreateFolderException Excepción al crear la carpeta
      */
     private void createOutFolderIfNotExists() throws CreateFolderException {
         try {

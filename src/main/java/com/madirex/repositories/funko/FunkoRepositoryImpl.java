@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementación de la interfaz FunkoRepository
@@ -101,12 +100,12 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         database.beginTransaction();
         database.insertAndGetKey(sql, entity.getCod().toString(),
-                        entity.getName(),
-                        entity.getModel().toString(),
-                        entity.getPrice(),
-                        entity.getReleaseDate(),
-                        LocalDateTime.now(),
-                        LocalDateTime.now());
+                entity.getName(),
+                entity.getModel().toString(),
+                entity.getPrice(),
+                entity.getReleaseDate(),
+                LocalDateTime.now(),
+                LocalDateTime.now());
         database.commit();
         return Optional.of(entity);
     }

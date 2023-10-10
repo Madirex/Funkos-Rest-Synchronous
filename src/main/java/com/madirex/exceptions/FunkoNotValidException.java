@@ -1,6 +1,14 @@
 package com.madirex.exceptions;
 
-public class FunkoNotValidException extends FunkoException{
+/**
+ * Excepción al no ser válido un Funko
+ */
+public class FunkoNotValidException extends FunkoException {
+    /**
+     * Constructor
+     *
+     * @param message mensaje de error
+     */
     public FunkoNotValidException(String message) {
         super("Funko no válido: " + message);
     }
