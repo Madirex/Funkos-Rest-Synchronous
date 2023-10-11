@@ -1,8 +1,6 @@
 package com.madirex;
 
-import com.madirex.exceptions.FunkoException;
-import com.madirex.exceptions.FunkoNotFoundException;
-import com.madirex.exceptions.FunkoNotRemovedException;
+import com.madirex.exceptions.*;
 import com.madirex.models.Funko;
 import com.madirex.models.Model;
 import com.madirex.repositories.funko.FunkoRepositoryImpl;
@@ -62,13 +60,32 @@ class FunkosServiceImplTest {
         verify(repository, times(2)).findByName("cuack");
     }
 
-    //TODO: FIX
     @Test
-    void testFindById() throws SQLException, FunkoNotFoundException {
+    void testFindByNameNotFound() throws SQLException {
+        when(repository.findByName("name")).thenReturn(List.of());
+        assertThrows(FunkoNotFoundException.class, () -> service.findByName("name"));
+    }
+
+    @Test
+    void testBackupDirectoryExists() {
+        String path = "data";
+        String fileName = "backup.json";
+        service = new FunkoServiceImpl(repository);
+        assertDoesNotThrow(() -> service.backup(path, fileName));
+    }
+
+    @Test
+    void testBackupDirectoryNotExists() {
+        String path = "ruta/inexistente";
+        String fileName = "backup.json";
+        service = new FunkoServiceImpl(repository);
+        assertDoesNotThrow(() -> service.backup(path, fileName));
+    }
+
+    @Test
+    void testFindById() throws SQLException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
         String id = funko.getCod().toString();
-        System.out.println(id);
-        System.out.println(funko.getCod().toString());
         when(repository.findById(id)).thenReturn(Optional.of(funko));
         var result = service.findById(id);
         assertTrue(result.isPresent());
@@ -82,9 +99,16 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testFindByIdNotExists() throws SQLException, FunkoNotFoundException {
-        when(repository.findById("d23574dc-d8b0-42c0-ad11-01db6aaca205")).thenReturn(Optional.empty());
-        assertThrows(FunkoNotFoundException.class, () -> service.findById("d23574dc-d8b0-42c0-ad11-01db6aaca205"));
+    void testFindByIdCached() throws SQLException, FunkoNotFoundException {
+        Funko cachedFunko = Funko.builder()
+                .name("Funko en caché")
+                .price(20.0)
+                .build();
+        service.getCache().put(cachedFunko.getCod().toString(), cachedFunko);
+        Optional<Funko> result = service.findById(cachedFunko.getCod().toString());
+        assertTrue(result.isPresent());
+        assertEquals(cachedFunko, result.get());
+        verify(repository, never()).findById(anyString());
     }
 
     @Test
@@ -100,6 +124,18 @@ class FunkosServiceImplTest {
                 () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado")
         );
         verify(repository, times(1)).save(funko);
+    }
+
+    @Test
+    void testSaveNotValid() throws SQLException {
+        Funko funkoToSave = Funko.builder()
+                .name("cuack")
+                .price(-12.42)
+                .releaseDate(LocalDate.now())
+                .model(Model.DISNEY)
+                .build();
+        when(repository.save(funkoToSave)).thenReturn(Optional.empty());
+        assertThrows(FunkoNotSavedException.class, () -> service.save(funkoToSave));
     }
 
     @Test
@@ -119,7 +155,18 @@ class FunkosServiceImplTest {
         verify(repository, times(1)).update(id, funko);
     }
 
-    //TODO: FIX
+    @Test
+    void testUpdateNotValid() throws SQLException {
+        Funko funkoToUpdate = Funko.builder()
+                .name("cuack")
+                .price(-12.42)
+                .releaseDate(LocalDate.now())
+                .model(Model.DISNEY)
+                .build();
+        when(repository.update(funkoToUpdate.getCod().toString(),funkoToUpdate)).thenReturn(Optional.empty());
+        assertThrows(FunkoNotValidException.class, () -> service.update(funkoToUpdate.getCod().toString(),funkoToUpdate));
+    }
+
     @Test
     void testDelete() throws SQLException, FunkoNotRemovedException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();

@@ -9,6 +9,7 @@ import com.madirex.exceptions.FunkoNotValidException;
 import com.madirex.models.Funko;
 import com.madirex.repositories.funko.FunkoRepository;
 import com.madirex.utils.LocalDateAdapter;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,8 @@ import java.util.Optional;
  */
 public class FunkoServiceImpl implements FunkoService {
     private static final int CACHE_SIZE = 25;
-    private static FunkoServiceImpl instance;
+
+    @Getter
     private final Map<String, Funko> cache;
     private final Logger logger = LoggerFactory.getLogger(FunkoServiceImpl.class);
     private final FunkoRepository funkoRepository;
@@ -45,18 +47,6 @@ public class FunkoServiceImpl implements FunkoService {
                 return size() > CACHE_SIZE;
             }
         };
-    }
-
-    /**
-     * Devuelve la instancia de la clase
-     *
-     * @return Instancia de la clase
-     */
-    public static FunkoServiceImpl getInstance(FunkoRepository funkoRepository) {
-        if (instance == null) {
-            instance = new FunkoServiceImpl(funkoRepository);
-        }
-        return instance;
     }
 
     /**
@@ -96,14 +86,12 @@ public class FunkoServiceImpl implements FunkoService {
     public void backup(String path, String fileName) throws SQLException, IOException {
         File dataDir = new File(path);
         if (dataDir.exists()) {
-            dataDir.mkdir();
             String dest = path + File.separator + fileName;
             Gson gson = new GsonBuilder()
                     .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                     .setPrettyPrinting()
                     .create();
-            String json = null;
-            json = gson.toJson(findAll());
+            String json = gson.toJson(findAll());
             Files.writeString(new File(dest).toPath(), json);
             logger.debug("Backup realizado con éxito");
         } else {
@@ -118,7 +106,7 @@ public class FunkoServiceImpl implements FunkoService {
      * @return Optional del elemento encontrado
      */
     @Override
-    public Optional<Funko> findById(String id) throws SQLException, FunkoNotFoundException {
+    public Optional<Funko> findById(String id) throws SQLException {
         logger.debug("Obteniendo Funko por id");
         Funko funko = cache.get(id);
         if (funko != null) {
@@ -126,8 +114,9 @@ public class FunkoServiceImpl implements FunkoService {
             return Optional.of(funko);
         }
         logger.debug("Funko no encontrado en caché, buscando en base de datos");
-        return Optional.ofNullable(cache.put(id, funkoRepository.findById(id).orElseThrow(() ->
-                new FunkoNotFoundException("No se ha encontrado el Funko con id " + id))));
+        Optional<Funko> result = funkoRepository.findById(id);
+        result.ifPresent(value -> cache.put(id, value));
+        return result;
     }
 
     /**
