@@ -13,8 +13,6 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.28")
     annotationProcessor("org.projectlombok:lombok:1.18.28")
 
-    implementation("io.projectreactor:reactor-core:3.5.10")
-
     implementation("com.h2database:h2:2.1.210")
     implementation("org.mybatis:mybatis:3.5.13")
     implementation("ch.qos.logback:logback-classic:1.4.11")
