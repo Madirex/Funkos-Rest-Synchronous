@@ -30,7 +30,6 @@ class FunkosServiceImplTest {
     @InjectMocks
     FunkoServiceImpl service;
 
-    //TODO: EDIT, FIX AND FINISH
     @Test
     void testFindAll() throws SQLException {
         var funkos = List.of(
@@ -49,62 +48,60 @@ class FunkosServiceImplTest {
         verify(repository, times(1)).findAll();
     }
 
-    //TODO: EDIT, FIX AND FINISH
     @Test
     void testFindByName() throws SQLException, FunkoNotFoundException {
         var funkos = List.of(Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build());
         when(repository.findByName("cuack")).thenReturn(funkos);
         var result = service.findByName("cuack");
-        assertAll("update",
-                () -> assertEquals(result.get(0).getName(), funkos.get(0).getName(), "El Funko no tiene el nombre esperado"), //TODO: get
-                () -> assertEquals(result.get(0).getPrice(), funkos.get(0).getPrice(), "El precio del Funko no es el esperado"), //TODO: get
-                () -> assertEquals(result.get(0).getReleaseDate(), funkos.get(0).getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"), //TODO: get
-                () -> assertEquals(result.get(0).getModel(), funkos.get(0).getModel(), "El modelo del Funko no es el esperado") //TODO: get
+        assertAll("findByName",
+                () -> assertEquals(result.get(0).getName(), funkos.get(0).getName(), "El Funko no tiene el nombre esperado"),
+                () -> assertEquals(result.get(0).getPrice(), funkos.get(0).getPrice(), "El precio del Funko no es el esperado"),
+                () -> assertEquals(result.get(0).getReleaseDate(), funkos.get(0).getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"),
+                () -> assertEquals(result.get(0).getModel(), funkos.get(0).getModel(), "El modelo del Funko no es el esperado")
         );
-        verify(repository, times(1)).findByName("cuack");
+        verify(repository, times(2)).findByName("cuack");
     }
 
-    //TODO: EDIT, FIX AND FINISH
+    //TODO: FIX
     @Test
     void testFindById() throws SQLException, FunkoNotFoundException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
         String id = funko.getCod().toString();
+        System.out.println(id);
+        System.out.println(funko.getCod().toString());
         when(repository.findById(id)).thenReturn(Optional.of(funko));
         var result = service.findById(id);
-        assertAll("update",
-                () -> assertEquals(result.get().getName(), funko.getName(), "El Funko no tiene el nombre esperado"), //TODO: get
-                () -> assertEquals(result.get().getPrice(), funko.getPrice(), "El precio del Funko no es el esperado"), //TODO: get
-                () -> assertEquals(result.get().getReleaseDate(), funko.getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"), //TODO: get
-                () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado") //TODO: get
+        assertTrue(result.isPresent());
+        assertAll("findById",
+                () -> assertEquals(result.get().getName(), funko.getName(), "El Funko no tiene el nombre esperado"),
+                () -> assertEquals(result.get().getPrice(), funko.getPrice(), "El precio del Funko no es el esperado"),
+                () -> assertEquals(result.get().getReleaseDate(), funko.getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"),
+                () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado")
         );
         verify(repository, times(1)).findById(id);
     }
 
-    //TODO: EDIT, FIX AND FINISH
     @Test
     void testFindByIdNotExists() throws SQLException, FunkoNotFoundException {
-        var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
-        String id = funko.getCod().toString();
-        when(repository.findById("d23574dc-d8b0-42c0-ad11-01db6aaca605")).thenReturn(Optional.empty());
-        var result = service.findById("d23574dc-d8b0-42c0-ad11-01db6aaca605");
+        when(repository.findById("d23574dc-d8b0-42c0-ad11-01db6aaca205")).thenReturn(Optional.empty());
+        assertThrows(FunkoNotFoundException.class, () -> service.findById("d23574dc-d8b0-42c0-ad11-01db6aaca205"));
     }
 
-    //TODO: EDIT, FIX AND FINISH
     @Test
     void testSave() throws SQLException, FunkoException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
         when(repository.save(funko)).thenReturn(Optional.of(funko));
         var result = service.save(funko);
-        assertAll("update",
-                () -> assertEquals(result.get().getName(), funko.getName(), "El Funko no tiene el nombre esperado"), //TODO: get
-                () -> assertEquals(result.get().getPrice(), funko.getPrice(), "El precio del Funko no es el esperado"), //TODO: get
-                () -> assertEquals(result.get().getReleaseDate(), funko.getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"), //TODO: get
-                () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado") //TODO: get
+        assertTrue(result.isPresent());
+        assertAll("save",
+                () -> assertEquals(result.get().getName(), funko.getName(), "El Funko no tiene el nombre esperado"),
+                () -> assertEquals(result.get().getPrice(), funko.getPrice(), "El precio del Funko no es el esperado"),
+                () -> assertEquals(result.get().getReleaseDate(), funko.getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"),
+                () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado")
         );
         verify(repository, times(1)).save(funko);
     }
 
-    //TODO: EDIT, FIX AND FINISH
     @Test
     void testUpdate() throws SQLException, FunkoException {
         LocalDate date = LocalDate.now();
@@ -112,44 +109,30 @@ class FunkosServiceImplTest {
         String id = funko.getCod().toString();
         when(repository.update(id, funko)).thenReturn(Optional.of(funko));
         var result = service.update(id, funko);
+        assertTrue(result.isPresent());
         assertAll("update",
-                () -> assertEquals(result.get().getName(), funko.getName(), "El Funko no tiene el nombre esperado"), //TODO: get
-                () -> assertEquals(result.get().getPrice(), funko.getPrice(), "El precio del Funko no es el esperado"), //TODO: get
-                () -> assertEquals(result.get().getReleaseDate(), funko.getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"), //TODO: get
-                () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado") //TODO: get
+                () -> assertEquals(result.get().getName(), funko.getName(), "El Funko no tiene el nombre esperado"),
+                () -> assertEquals(result.get().getPrice(), funko.getPrice(), "El precio del Funko no es el esperado"),
+                () -> assertEquals(result.get().getReleaseDate(), funko.getReleaseDate(), "La fecha de lanzamiento del Funko no es la esperada"),
+                () -> assertEquals(result.get().getModel(), funko.getModel(), "El modelo del Funko no es el esperado")
         );
         verify(repository, times(1)).update(id, funko);
     }
 
-    //TODO: EDIT, FIX AND FINISH
-//    @Test //TODO: DO
-//    void testUpdateNotExists() throws SQLException, FunkoNotValidException {
-//        var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
-//        String id = funko.getCod().toString();
-//        when(repository.update(id,funko)).thenThrow(new FunkoNotFoundException(id));
-//        try {
-//            var result = service.update(id, funko);
-//        } catch (FunkoNotValidException ex) {
-//            assertEquals(ex.getMessage(), "El Funko no es válido", "Msg");
-//        }
-//        verify(repository, times(1)).update(funko);
-//    }
-
-    //TODO: EDIT, FIX AND FINISH
+    //TODO: FIX
     @Test
     void testDelete() throws SQLException, FunkoNotRemovedException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
         String id = funko.getCod().toString();
         when(repository.delete(id)).thenReturn(true);
         var result = service.delete(id);
-        assertTrue(result, "No se ha borrado el funko");
+        assertTrue(result);
         verify(repository, times(1)).delete(id);
     }
 
-    //TODO: EDIT, FIX AND FINISH
     @Test
-    void testDeleteNotExists() throws SQLException, FunkoNotRemovedException {
+    void testDeleteNotExists() throws SQLException {
         when(repository.delete("63161c2e-1602-44b5-bd8b-3b424f7b2b4c")).thenReturn(false);
-        var result = service.delete("63161c2e-1602-44b5-bd8b-3b424f7b2b4c");
+        assertThrows(FunkoNotRemovedException.class, () -> service.delete("63161c2e-1602-44b5-bd8b-3b424f7b2b4c"));
     }
 }

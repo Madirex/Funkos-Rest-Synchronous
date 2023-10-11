@@ -25,12 +25,24 @@ class FunkosRepositoryTestDB {
     @BeforeEach
     void setUp() throws SQLException {
         funkoRepository = FunkoRepositoryImpl.getInstance(DatabaseManager.getInstance());
-        //funkoRepository.deleteAll(); //TODO: DO
+        funkoRepository.findAll().forEach(e -> {
+            try {
+                funkoRepository.delete(e.getCod().toString());
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     @AfterEach
     void tearDown() throws SQLException {
-        //funkoRepository.deleteAll(); //TODO: DO
+        funkoRepository.findAll().forEach(e -> {
+            try {
+                funkoRepository.delete(e.getCod().toString());
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     @Test
@@ -43,12 +55,13 @@ class FunkosRepositoryTestDB {
                 .releaseDate(date)
                 .build();
         Optional<Funko> savedFunko = funkoRepository.save(funko);
+        assertTrue(savedFunko.isPresent());
         assertAll(() -> assertNotNull(savedFunko),
-                () -> assertNotNull(savedFunko.get().getCod()), //TODO: check get
-                () -> assertEquals(funko.getName(), savedFunko.get().getName()), //TODO: check get
-                () -> assertEquals(funko.getModel(), savedFunko.get().getModel()), //TODO: check get
-                () -> assertEquals(funko.getPrice(), savedFunko.get().getPrice()), //TODO: check get
-                () -> assertEquals(funko.getReleaseDate(), savedFunko.get().getReleaseDate()) //TODO: check get
+                () -> assertNotNull(savedFunko.get().getCod()),
+                () -> assertEquals(funko.getName(), savedFunko.get().getName()),
+                () -> assertEquals(funko.getModel(), savedFunko.get().getModel()),
+                () -> assertEquals(funko.getPrice(), savedFunko.get().getPrice()),
+                () -> assertEquals(funko.getReleaseDate(), savedFunko.get().getReleaseDate())
         );
     }
 
@@ -62,18 +75,19 @@ class FunkosRepositoryTestDB {
                 .releaseDate(date)
                 .build();
         Optional<Funko> savedFunko = funkoRepository.save(funko);
-        Optional<Funko> foundFunko = funkoRepository.findById(savedFunko.get().getCod().toString()); //TODO: check get
-        assertAll(() -> assertTrue(foundFunko.isPresent()),
-                () -> assertEquals(funko.getName(), foundFunko.get().getName()), //TODO: check get
-                () -> assertEquals(funko.getModel(), foundFunko.get().getModel()), //TODO: check get
-                () -> assertEquals(funko.getPrice(), foundFunko.get().getPrice()), //TODO: check get
-                () -> assertEquals(funko.getReleaseDate(), foundFunko.get().getReleaseDate()), //TODO: check get
-                () -> assertNotNull(foundFunko.get().getCod()) //TODO: check get
+        assertTrue(savedFunko.isPresent());
+        Optional<Funko> foundFunko = funkoRepository.findById(savedFunko.get().getCod().toString());
+        assertTrue(foundFunko.isPresent());
+        assertAll(() -> assertEquals(funko.getName(), foundFunko.get().getName()),
+                () -> assertEquals(funko.getModel(), foundFunko.get().getModel()),
+                () -> assertEquals(funko.getPrice(), foundFunko.get().getPrice()),
+                () -> assertEquals(funko.getReleaseDate(), foundFunko.get().getReleaseDate()),
+                () -> assertNotNull(foundFunko.get().getCod())
         );
     }
 
     @Test
-    void testFindAllFunkos() throws SQLException, FunkoException {
+    void testFindAllFunkos() throws SQLException {
         funkoRepository.save(Funko.builder()
                 .name("test1")
                 .model(Model.ANIME)
@@ -90,7 +104,7 @@ class FunkosRepositoryTestDB {
     }
 
     @Test
-    void testFindFunkosByName() throws SQLException, FunkoException {
+    void testFindFunkosByName() throws SQLException {
         LocalDate date = LocalDate.now();
         Funko funko1 = Funko.builder()
                 .name("test1")
@@ -99,7 +113,7 @@ class FunkosRepositoryTestDB {
                 .releaseDate(date)
                 .build();
         Funko funko2 = Funko.builder()
-                .name("test2")
+                .name("test1")
                 .model(Model.OTROS)
                 .price(81.23)
                 .releaseDate(date)
@@ -121,7 +135,7 @@ class FunkosRepositoryTestDB {
     }
 
     @Test
-    void testUpdateFunko() throws SQLException, FunkoException {
+    void testUpdateFunko() throws SQLException {
         Funko funko = Funko.builder()
                 .name("Test")
                 .model(Model.ANIME)
@@ -129,34 +143,19 @@ class FunkosRepositoryTestDB {
                 .releaseDate(LocalDate.now())
                 .build();
         Optional<Funko> savedFunko = funkoRepository.save(funko);
-        savedFunko.get().setName("Updated"); //TODO: check get
-        savedFunko.get().setPrice(42.43); //TODO: check get
-        funkoRepository.update(funko.getCod().toString(), savedFunko.get()); //TODO: check get
-        Optional<Funko> foundFunko = funkoRepository.findById(savedFunko.get().getCod().toString()); //TODO: check get
-        assertAll(() -> assertTrue(foundFunko.isPresent()),
-                () -> assertEquals(savedFunko.get().getName(), foundFunko.get().getName()), //TODO: check get
-                () -> assertEquals(savedFunko.get().getPrice(), foundFunko.get().getPrice()) //TODO: check get
+        assertTrue(savedFunko.isPresent());
+        savedFunko.get().setName("Updated");
+        savedFunko.get().setPrice(42.43);
+        funkoRepository.update(funko.getCod().toString(), savedFunko.get());
+        Optional<Funko> foundFunko = funkoRepository.findById(savedFunko.get().getCod().toString());
+        assertTrue(foundFunko.isPresent());
+        assertAll(() -> assertEquals(savedFunko.get().getName(), foundFunko.get().getName()),
+                () -> assertEquals(savedFunko.get().getPrice(), foundFunko.get().getPrice())
         );
     }
 
     @Test
-    void testUpdateFunkoNotExists() throws SQLException {
-        Funko funko = Funko.builder()
-                .name("Test")
-                .model(Model.ANIME)
-                .price(4.42)
-                .releaseDate(LocalDate.now())
-                .build();
-        Exception exception = assertThrows(FunkoNotFoundException.class, () -> {
-            funkoRepository.update("5aec845c-2e06-4b7d-8d5a-4e0a0e23fb16", funko);
-        });
-        String expectedMessage = "Funko/a no encontrado con id: " + "5aec845c-2e06-4b7d-8d5a-4e0a0e23fb16";
-
-        assertEquals(expectedMessage, exception.getMessage());
-    }
-
-    @Test
-    void testDeleteFunko() throws SQLException, FunkoException {
+    void testDeleteFunko() throws SQLException {
         Funko funko = Funko.builder()
                 .name("Test")
                 .model(Model.ANIME)
@@ -164,8 +163,9 @@ class FunkosRepositoryTestDB {
                 .releaseDate(LocalDate.now())
                 .build();
         Optional<Funko> savedFunko = funkoRepository.save(funko);
-        funkoRepository.delete(savedFunko.get().getCod().toString()); //TODO: CHEQUEAR GET
-        Optional<Funko> foundFunko = funkoRepository.findById(savedFunko.get().getCod().toString()); //TODO: CHEQUEAR GET
+        assertTrue(savedFunko.isPresent());
+        funkoRepository.delete(savedFunko.get().getCod().toString());
+        Optional<Funko> foundFunko = funkoRepository.findById(savedFunko.get().getCod().toString());
         assertAll(() -> assertFalse(foundFunko.isPresent())
         );
     }

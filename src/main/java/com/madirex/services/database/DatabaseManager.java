@@ -62,7 +62,7 @@ public class DatabaseManager {
         Dotenv dotenv = Dotenv.load();
         user = dotenv.get("DATABASE_USER");
         password = dotenv.get("DATABASE_PASSWORD");
-        connectionUrl = this.driver + this.serverUrl + File.separator + this.databaseName;
+        connectionUrl = this.driver + ":" + this.serverUrl + File.separator + this.databaseName;
         logger.debug("Configuración de acceso a la Base de Datos cargada");
     }
 
