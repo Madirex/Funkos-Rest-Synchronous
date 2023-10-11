@@ -1,7 +1,5 @@
 package com.madirex;
 
-import com.madirex.exceptions.FunkoException;
-import com.madirex.exceptions.FunkoNotFoundException;
 import com.madirex.models.Funko;
 import com.madirex.models.Model;
 import com.madirex.repositories.funko.FunkoRepository;
@@ -18,10 +16,16 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Clase de testeo para la clase FunkoRepository
+ */
 class FunkosRepositoryTestDB {
 
     private FunkoRepository funkoRepository;
 
+    /**
+     * Método que se ejecuta antes de cada test
+     */
     @BeforeEach
     void setUp() throws SQLException {
         funkoRepository = FunkoRepositoryImpl.getInstance(DatabaseManager.getInstance());
@@ -34,6 +38,9 @@ class FunkosRepositoryTestDB {
         });
     }
 
+    /**
+     * Método que se ejecuta después de cada test
+     */
     @AfterEach
     void tearDown() throws SQLException {
         funkoRepository.findAll().forEach(e -> {
@@ -45,8 +52,13 @@ class FunkosRepositoryTestDB {
         });
     }
 
+    /**
+     * Test para comprobar que se puede guardar un Funko
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
-    void testSaveFunko() throws SQLException, FunkoException {
+    void testSaveFunko() throws SQLException {
         LocalDate date = LocalDate.now();
         Funko funko = Funko.builder()
                 .name("Test")
@@ -65,8 +77,13 @@ class FunkosRepositoryTestDB {
         );
     }
 
+    /**
+     * Test para comprobar FindById
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
-    void testFindFunkoById() throws SQLException, FunkoException {
+    void testFindFunkoById() throws SQLException {
         LocalDate date = LocalDate.now();
         Funko funko = Funko.builder()
                 .name("Test")
@@ -86,6 +103,11 @@ class FunkosRepositoryTestDB {
         );
     }
 
+    /**
+     * Test para comprobar FindAll
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testFindAllFunkos() throws SQLException {
         funkoRepository.save(Funko.builder()
@@ -103,6 +125,11 @@ class FunkosRepositoryTestDB {
         assertEquals(2, funkoRepository.findAll().size());
     }
 
+    /**
+     * Test para comprobar FindByName
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testFindFunkosByName() throws SQLException {
         LocalDate date = LocalDate.now();
@@ -134,6 +161,11 @@ class FunkosRepositoryTestDB {
         );
     }
 
+    /**
+     * Test para comprobar Update
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testUpdateFunko() throws SQLException {
         Funko funko = Funko.builder()
@@ -154,6 +186,11 @@ class FunkosRepositoryTestDB {
         );
     }
 
+    /**
+     * Test para comprobar Delete
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testDeleteFunko() throws SQLException {
         Funko funko = Funko.builder()
@@ -170,6 +207,11 @@ class FunkosRepositoryTestDB {
         );
     }
 
+    /**
+     * Test para comprobar que no se pueda eliminar un Funko que no existe
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testDeleteFunkoNotExists() throws SQLException {
         boolean deleted = funkoRepository.delete("cac4c061-20ec-4e87-ad3a-b1a7ea12facc");

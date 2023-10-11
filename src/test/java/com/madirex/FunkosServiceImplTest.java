@@ -19,6 +19,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Clase de testeo para la clase FunkoService
+ */
 @ExtendWith(MockitoExtension.class)
 class FunkosServiceImplTest {
 
@@ -28,6 +31,11 @@ class FunkosServiceImplTest {
     @InjectMocks
     FunkoServiceImpl service;
 
+    /**
+     * Test para FindAll
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testFindAll() throws SQLException {
         var funkos = List.of(
@@ -37,15 +45,20 @@ class FunkosServiceImplTest {
         when(repository.findAll()).thenReturn(funkos);
         var result = service.findAll();
         assertAll("findAll",
-                () -> assertEquals(result.size(), 2, "No se han recuperado 2 Funkos"),
-                () -> assertEquals(result.get(0).getName(), "test1", "El primer Funko no es el esperado"),
-                () -> assertEquals(result.get(1).getName(), "test2", "El segundo Funko no es el esperado"),
-                () -> assertEquals(result.get(0).getPrice(), 42.0, "La calificación del primer Funko no es la esperada"),
-                () -> assertEquals(result.get(1).getPrice(), 42.24, "La calificación del segundo Funko no es la esperada")
+                () -> assertEquals(2, result.size(), "No se han recuperado 2 Funkos"),
+                () -> assertEquals("test1", result.get(0).getName(), "El primer Funko no es el esperado"),
+                () -> assertEquals("test2", result.get(1).getName(), "El segundo Funko no es el esperado"),
+                () -> assertEquals(42.0, result.get(0).getPrice(), "La calificación del primer Funko no es la esperada"),
+                () -> assertEquals(42.24, result.get(1).getPrice(), "La calificación del segundo Funko no es la esperada")
         );
         verify(repository, times(1)).findAll();
     }
 
+    /**
+     * Test para FindByName
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testFindByName() throws SQLException, FunkoNotFoundException {
         var funkos = List.of(Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build());
@@ -60,12 +73,20 @@ class FunkosServiceImplTest {
         verify(repository, times(2)).findByName("cuack");
     }
 
+    /**
+     * Test para FindByName cuando no se encuentra ningún Funko
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testFindByNameNotFound() throws SQLException {
         when(repository.findByName("name")).thenReturn(List.of());
         assertThrows(FunkoNotFoundException.class, () -> service.findByName("name"));
     }
 
+    /**
+     * Test para Backup
+     */
     @Test
     void testBackupDirectoryExists() {
         String path = "data";
@@ -74,6 +95,9 @@ class FunkosServiceImplTest {
         assertDoesNotThrow(() -> service.backup(path, fileName));
     }
 
+    /**
+     * Test para Backup cuando el directorio no existe
+     */
     @Test
     void testBackupDirectoryNotExists() {
         String path = "ruta/inexistente";
@@ -82,6 +106,11 @@ class FunkosServiceImplTest {
         assertDoesNotThrow(() -> service.backup(path, fileName));
     }
 
+    /**
+     * Test para FindById
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testFindById() throws SQLException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
@@ -98,8 +127,13 @@ class FunkosServiceImplTest {
         verify(repository, times(1)).findById(id);
     }
 
+    /**
+     * Test para FindById caché
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
-    void testFindByIdCached() throws SQLException, FunkoNotFoundException {
+    void testFindByIdCached() throws SQLException {
         Funko cachedFunko = Funko.builder()
                 .name("Funko en caché")
                 .price(20.0)
@@ -111,6 +145,11 @@ class FunkosServiceImplTest {
         verify(repository, never()).findById(anyString());
     }
 
+    /**
+     * Test para Save
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testSave() throws SQLException, FunkoException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
@@ -126,6 +165,11 @@ class FunkosServiceImplTest {
         verify(repository, times(1)).save(funko);
     }
 
+    /**
+     * Test para Save cuando el Funko no es válido
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testSaveNotValid() throws SQLException {
         Funko funkoToSave = Funko.builder()
@@ -138,6 +182,11 @@ class FunkosServiceImplTest {
         assertThrows(FunkoNotSavedException.class, () -> service.save(funkoToSave));
     }
 
+    /**
+     * Test para Update
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testUpdate() throws SQLException, FunkoException {
         LocalDate date = LocalDate.now();
@@ -155,6 +204,11 @@ class FunkosServiceImplTest {
         verify(repository, times(1)).update(id, funko);
     }
 
+    /**
+     * Test para Update cuando el Funko no es válido
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testUpdateNotValid() throws SQLException {
         Funko funkoToUpdate = Funko.builder()
@@ -163,10 +217,15 @@ class FunkosServiceImplTest {
                 .releaseDate(LocalDate.now())
                 .model(Model.DISNEY)
                 .build();
-        when(repository.update(funkoToUpdate.getCod().toString(),funkoToUpdate)).thenReturn(Optional.empty());
-        assertThrows(FunkoNotValidException.class, () -> service.update(funkoToUpdate.getCod().toString(),funkoToUpdate));
+        when(repository.update(funkoToUpdate.getCod().toString(), funkoToUpdate)).thenReturn(Optional.empty());
+        assertThrows(FunkoNotValidException.class, () -> service.update(funkoToUpdate.getCod().toString(), funkoToUpdate));
     }
 
+    /**
+     * Test para Delete
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testDelete() throws SQLException, FunkoNotRemovedException {
         var funko = Funko.builder().name("cuack").price(12.42).releaseDate(LocalDate.now()).model(Model.DISNEY).build();
@@ -177,6 +236,11 @@ class FunkosServiceImplTest {
         verify(repository, times(1)).delete(id);
     }
 
+    /**
+     * Test para Delete cuando el Funko no existe
+     *
+     * @throws SQLException Si hay un error en la base de datos
+     */
     @Test
     void testDeleteNotExists() throws SQLException {
         when(repository.delete("63161c2e-1602-44b5-bd8b-3b424f7b2b4c")).thenReturn(false);
