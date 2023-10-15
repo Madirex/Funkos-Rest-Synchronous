@@ -4,6 +4,7 @@
 </p>
 
 [Ver versión asíncrona](https://github.com/Madirex/Funkos-Rest-Async)
+
 [Ver versión reactiva](https://github.com/Madirex/Funkos-Rest-Reactive)
 
 ## 📝 Descripción
