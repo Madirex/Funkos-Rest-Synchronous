@@ -19,7 +19,7 @@ API Rest de Funkos programada en Java con Gradle y base de datos en H2 (modifica
 - **database.properties:** Este fichero es el que se deberá modificar si se quiere cambiar la URL, el driver, el nombre de la base de datos o si se quiere forzar el reinicio de la tabla Funko en el inicio del programa (eliminará y volverá a crear la tabla de Funko).
 
 ## ⚙ Herramientas
-- Java 11.
+- Java 17.
 - Gradle.
 - H2.
 - JUnit.
